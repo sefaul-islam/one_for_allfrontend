@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Eye, EyeOff } from 'lucide-react';
 import adminService from '../../Services/adminService';
 
@@ -8,7 +8,7 @@ const AddStudentForm = ({ isOpen, onClose, onSuccess }) => {
     email: '',
     password: '',
     role: 'STUDENT',
-    department: '',
+    dept: '',
     studentNumber: '',
     gradeLevel: ''
   });
@@ -16,14 +16,41 @@ const AddStudentForm = ({ isOpen, onClose, onSuccess }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [departments, setDepartments] = useState([]);
 
-  const departments = [
-    'Computer Science',
-    'Electrical Engineering',
-    'Business Studies',
-    'Civil Engineering',
-    'English'
-  ];
+  // Fetch departments from API
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      try {
+        const result = await adminService.getAllDepartments();
+        if (result.success) {
+          setDepartments(result.data || []);
+        } else {
+          // Fallback to hardcoded departments if API fails
+          setDepartments([
+            { id: 1, name: 'Computer Science' },
+            { id: 2, name: 'Electrical Engineering' },
+            { id: 3, name: 'Business Studies' },
+            { id: 4, name: 'Civil Engineering' },
+            { id: 5, name: 'English' }
+          ]);
+        }
+      } catch {
+        // Fallback to hardcoded departments
+        setDepartments([
+          { id: 1, name: 'Computer Science' },
+          { id: 2, name: 'Electrical Engineering' },
+          { id: 3, name: 'Business Studies' },
+          { id: 4, name: 'Civil Engineering' },
+          { id: 5, name: 'English' }
+        ]);
+      }
+    };
+
+    if (isOpen) {
+      fetchDepartments();
+    }
+  }, [isOpen]);
 
   const gradeLevels = [
     '1st Year',
@@ -59,7 +86,7 @@ const AddStudentForm = ({ isOpen, onClose, onSuccess }) => {
       setError('Password must be at least 6 characters');
       return false;
     }
-    if (!formData.department) {
+    if (!formData.dept) {
       setError('Department is required');
       return false;
     }
@@ -83,7 +110,18 @@ const AddStudentForm = ({ isOpen, onClose, onSuccess }) => {
     setError('');
 
     try {
-      const result = await adminService.addStudent(formData);
+      // Prepare the data with the exact backend structure
+      const studentData = {
+        username: formData.username.trim(),
+        email: formData.email.trim(),
+        password: formData.password,
+        role: formData.role,
+        dept: formData.dept, // Send as dept to match backend
+        studentNumber: formData.studentNumber.trim(),
+        gradeLevel: formData.gradeLevel
+      };
+
+      const result = await adminService.addStudent(studentData);
       
       if (result.success) {
         // Reset form
@@ -92,7 +130,7 @@ const AddStudentForm = ({ isOpen, onClose, onSuccess }) => {
           email: '',
           password: '',
           role: 'STUDENT',
-          department: '',
+          dept: '',
           studentNumber: '',
           gradeLevel: ''
         });
@@ -110,16 +148,15 @@ const AddStudentForm = ({ isOpen, onClose, onSuccess }) => {
   };
 
   const handleClose = () => {
-    if (!loading) {
-      setFormData({
-        username: '',
-        email: '',
-        password: '',
-        role: 'STUDENT',
-        department: '',
-        studentNumber: '',
-        gradeLevel: ''
-      });
+    if (!loading) {        setFormData({
+          username: '',
+          email: '',
+          password: '',
+          role: 'STUDENT',
+          dept: '',
+          studentNumber: '',
+          gradeLevel: ''
+        });
       setError('');
       onClose();
     }
@@ -228,15 +265,17 @@ const AddStudentForm = ({ isOpen, onClose, onSuccess }) => {
               Department *
             </label>
             <select
-              name="department"
-              value={formData.department}
+              name="dept"
+              value={formData.dept}
               onChange={handleInputChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               disabled={loading}
             >
               <option value="">Select department</option>
               {departments.map(dept => (
-                <option key={dept} value={dept}>{dept}</option>
+                <option key={dept.id || dept.name || dept} value={dept.name || dept}>
+                  {dept.name || dept}
+                </option>
               ))}
             </select>
           </div>

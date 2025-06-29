@@ -141,7 +141,7 @@ const adminService = {
   // Add new student
   addStudent: async (studentData) => {
     try {
-      const response = await api.post('/admin/createStudent', studentData);
+      const response = await api.post('/admin/createstudent', studentData);
       return {
         success: true,
         data: response.data,
