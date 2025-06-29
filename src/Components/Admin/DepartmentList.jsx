@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Building, Users, Trash2, ChevronRight } from 'lucide-react';
+import { Plus, Building, Users, ChevronRight } from 'lucide-react';
 import SearchBar from './SearchBar';
 import DepartmentFacultyView from './DepartmentFacultyView';
 import adminService from '../../Services/adminService';
@@ -15,9 +15,6 @@ const DepartmentList = () => {
   const [newDepartmentName, setNewDepartmentName] = useState('');
   const [adding, setAdding] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState(null);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [departmentToDelete, setDepartmentToDelete] = useState(null);
-  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     fetchDepartments();
@@ -101,29 +98,6 @@ const DepartmentList = () => {
     }
   };
 
-  const handleDeleteDepartment = async () => {
-    if (!departmentToDelete) return;
-
-    setDeleting(true);
-    try {
-      const result = await adminService.deleteDepartment(departmentToDelete.id);
-      if (result.success) {
-        await fetchDepartments(); // Refresh the list with faculty counts
-        setShowDeleteModal(false);
-        setDepartmentToDelete(null);
-      }
-    } catch {
-      // Silently handle error
-    } finally {
-      setDeleting(false);
-    }
-  };
-
-  const openDeleteModal = (department) => {
-    setDepartmentToDelete(department);
-    setShowDeleteModal(true);
-  };
-
   const viewDepartmentFaculty = (department) => {
     setSelectedDepartment(department);
   };
@@ -203,16 +177,6 @@ const DepartmentList = () => {
                   </div>
                 </div>
               </div>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  openDeleteModal(department);
-                }}
-                className="text-red-500 hover:text-red-700 p-1 hover:bg-red-50 rounded transition-colors duration-200"
-                title="Delete Department"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
             </div>
 
             <div className="bg-gray-50 hover:bg-gray-100 text-gray-700 py-2 px-3 rounded-lg flex items-center justify-between transition-colors duration-200">
@@ -281,36 +245,6 @@ const DepartmentList = () => {
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* Delete Confirmation Modal */}
-      {showDeleteModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl max-w-md w-full p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Delete Department</h2>
-            <p className="text-gray-600 mb-6">
-              Are you sure you want to delete "{departmentToDelete?.name}"? This action cannot be undone.
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => {
-                  setShowDeleteModal(false);
-                  setDepartmentToDelete(null);
-                }}
-                className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDeleteDepartment}
-                disabled={deleting}
-                className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white rounded-lg transition-colors duration-200"
-              >
-                {deleting ? 'Deleting...' : 'Delete'}
-              </button>
-            </div>
           </div>
         </div>
       )}

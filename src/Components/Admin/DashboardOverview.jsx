@@ -34,9 +34,6 @@ const DashboardOverview = () => {
       // Fetch sessions data using the same method as Sessions tab
       const sessionsResult = await adminService.getAllSessions();
       const totalSessions = sessionsResult.success ? (Array.isArray(sessionsResult.data) ? sessionsResult.data.length : 0) : 0;
-      
-      console.log('Sessions result for dashboard:', sessionsResult);
-      console.log('Total sessions count:', totalSessions);
 
       setStats({
         totalStudents: studentCount,

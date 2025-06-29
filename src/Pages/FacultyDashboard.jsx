@@ -115,7 +115,6 @@ const FacultyDashboard = () => {
     try {
       // Fetch counsel stats
       const counselResult = await getCounselStatsByFaculty();
-      console.log('Counsel result:', counselResult);
 
       if (counselResult.success) {
         setStats(prev => ({
@@ -133,34 +132,29 @@ const FacultyDashboard = () => {
       // Try to fetch faculty count separately (may fail if no admin access)
       try {
         const facultyResult = await adminService.getAllFacultyMembers();
-        console.log('Faculty result:', facultyResult);
         
         if (facultyResult.success) {
           const facultyCount = Array.isArray(facultyResult.data) ? facultyResult.data.length : 0;
-          console.log('Faculty count:', facultyCount);
           
           setStats(prev => ({
             ...prev,
             totalFaculty: facultyCount
           }));
         } else {
-          console.log('Faculty fetch failed:', facultyResult.message);
           // Set a default value or leave as 0
           setStats(prev => ({
             ...prev,
             totalFaculty: 0
           }));
         }
-      } catch (facultyError) {
-        console.error('Faculty fetch error:', facultyError);
+      } catch {
         // Faculty user might not have access to admin endpoints
         setStats(prev => ({
           ...prev,
           totalFaculty: 0
         }));
       }
-    } catch (error) {
-      console.error('Error in handleRefresh:', error);
+    } catch {
       setError('Failed to fetch counsel stats');
     } finally {
       setLoading(false);
