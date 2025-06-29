@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Eye, Edit, Users } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import SearchBar from './SearchBar';
 import DataTable from './DataTable';
 import AddFacultyForm from './AddFacultyForm';
-import FacultyViewModal from './FacultyViewModal';
 import adminService from '../../Services/adminService';
 
 const FacultyList = () => {
@@ -13,9 +12,7 @@ const FacultyList = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [showViewModal, setShowViewModal] = useState(false);
   const [facultyToDelete, setFacultyToDelete] = useState(null);
-  const [facultyToView, setFacultyToView] = useState(null);
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
@@ -55,16 +52,6 @@ const FacultyList = () => {
     fetchFaculty(); // Refresh the list
   };
 
-  const handleViewClick = (facultyMember) => {
-    setFacultyToView(facultyMember);
-    setShowViewModal(true);
-  };
-
-  const handleViewClose = () => {
-    setShowViewModal(false);
-    setFacultyToView(null);
-  };
-
   const handleDeleteClick = (facultyMember) => {
     setFacultyToDelete(facultyMember);
     setShowDeleteModal(true);
@@ -75,7 +62,7 @@ const FacultyList = () => {
 
     setDeleting(true);
     try {
-      const response = await adminService.deleteFaculty(facultyToDelete.facultyId);
+      const response = await adminService.deleteFacultyById(facultyToDelete.facultyId);
       
       if (response.success) {
         // Remove from local state
@@ -134,44 +121,34 @@ const FacultyList = () => {
       )
     },
     {
-      key: 'phone',
-      header: 'Phone'
-    },
-    {
-      key: 'status',
-      header: 'Status',
-      render: () => (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-          Active
-        </span>
+      key: 'academicTitle',
+      header: 'Academic Title',
+      render: (faculty) => (
+        <span className="text-sm text-gray-900">{faculty.academicTitle || 'N/A'}</span>
       )
     },
     {
-      key: 'joinDate',
-      header: 'Join Date',
-      render: (faculty) => faculty.joinDate ? new Date(faculty.joinDate).toLocaleDateString() : 'N/A'
+      key: 'contactNumber',
+      header: 'Contact Number',
+      render: (faculty) => (
+        <span className="text-sm text-gray-900">{faculty.contactNumber || 'N/A'}</span>
+      )
+    },
+    {
+      key: 'userId',
+      header: 'User ID',
+      render: (faculty) => (
+        <span className="text-sm font-mono text-gray-600">{faculty.userId}</span>
+      )
     },
     {
       key: 'actions',
       header: 'Actions',
       render: (faculty) => (
-        <div className="flex items-center space-x-2">
-          <button 
-            onClick={() => handleViewClick(faculty)}
-            className="p-1 text-blue-600 hover:text-blue-800 transition-colors"
-            title="View Details"
-          >
-            <Eye className="w-4 h-4" />
-          </button>
-          <button 
-            className="p-1 text-green-600 hover:text-green-800 transition-colors"
-            title="Edit Faculty"
-          >
-            <Edit className="w-4 h-4" />
-          </button>
+        <div className="flex items-center justify-center">
           <button 
             onClick={() => handleDeleteClick(faculty)}
-            className="p-1 text-red-600 hover:text-red-800 transition-colors"
+            className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors"
             title="Delete Faculty"
           >
             <Trash2 className="w-4 h-4" />
@@ -345,13 +322,6 @@ const FacultyList = () => {
           </div>
         </div>
       )}
-
-      {/* View Faculty Modal */}
-      <FacultyViewModal
-        isOpen={showViewModal}
-        faculty={facultyToView}
-        onClose={handleViewClose}
-      />
     </div>
   );
 };

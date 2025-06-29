@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Eye, Edit, Trash2 } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import SearchBar from './SearchBar';
 import DataTable from './DataTable';
 import AddStudentForm from './AddStudentForm';
-import StudentViewModal from './StudentViewModal';
 import adminService from '../../Services/adminService';
 
 const StudentList = () => {
@@ -12,8 +11,9 @@ const StudentList = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
-  const [showViewModal, setShowViewModal] = useState(false);
-  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [studentToDelete, setStudentToDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     fetchStudents();
@@ -54,26 +54,32 @@ const StudentList = () => {
     fetchStudents(); // Refresh the list
   };
 
-  const handleDelete = async (student) => {
-    if (window.confirm(`Are you sure you want to delete ${student.name}?`)) {
-      try {
-        const result = await adminService.deleteUser(student.userId);
-        if (result.success) {
-          setStudents(prev => prev.filter(s => s.userId !== student.userId));
-        }
-      } catch {
-        // Silently handle error
+  const handleDelete = (student) => {
+    setStudentToDelete(student);
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!studentToDelete) return;
+
+    setDeleting(true);
+    try {
+      const result = await adminService.deleteStudentById(studentToDelete.userId);
+      if (result.success) {
+        setStudents(prev => prev.filter(s => s.userId !== studentToDelete.userId));
+        setShowDeleteModal(false);
+        setStudentToDelete(null);
       }
+    } catch {
+      // Silently handle error
+    } finally {
+      setDeleting(false);
     }
   };
 
-  const handleEdit = () => {
-    // TODO: Implement edit functionality for student
-  };
-
-  const handleView = (student) => {
-    setSelectedStudent(student);
-    setShowViewModal(true);
+  const handleDeleteCancel = () => {
+    setShowDeleteModal(false);
+    setStudentToDelete(null);
   };
 
   const columns = [
@@ -128,24 +134,10 @@ const StudentList = () => {
       key: 'actions',
       header: 'Actions',
       render: (row) => (
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={() => handleView(row)}
-            className="p-1 text-blue-600 hover:text-blue-800 transition-colors"
-            title="View Details"
-          >
-            <Eye className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => handleEdit(row)}
-            className="p-1 text-green-600 hover:text-green-800 transition-colors"
-            title="Edit Student"
-          >
-            <Edit className="w-4 h-4" />
-          </button>
+        <div className="flex items-center justify-center">
           <button
             onClick={() => handleDelete(row)}
-            className="p-1 text-red-600 hover:text-red-800 transition-colors"
+            className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors"
             title="Delete Student"
           >
             <Trash2 className="w-4 h-4" />
@@ -222,15 +214,41 @@ const StudentList = () => {
         onSuccess={handleAddSuccess}
       />
 
-      {/* Student View Modal */}
-      <StudentViewModal
-        isOpen={showViewModal}
-        student={selectedStudent}
-        onClose={() => {
-          setShowViewModal(false);
-          setSelectedStudent(null);
-        }}
-      />
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Delete Student</h3>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to delete <strong>{studentToDelete?.name}</strong>? 
+              This action cannot be undone.
+            </p>
+            <div className="flex space-x-3">
+              <button
+                onClick={handleDeleteCancel}
+                disabled={deleting}
+                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteConfirm}
+                disabled={deleting}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center justify-center"
+              >
+                {deleting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Deleting...
+                  </>
+                ) : (
+                  'Delete'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

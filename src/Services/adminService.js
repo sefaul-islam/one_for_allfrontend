@@ -191,10 +191,44 @@ const adminService = {
     }
   },
 
+  // Delete student by ID
+  deleteStudentById: async (studentId) => {
+    try {
+      await api.delete(`/admin/${studentId}/deletestudentbyid`);
+      return {
+        success: true,
+        message: 'Student deleted successfully'
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Failed to delete student',
+        error: error.response?.data
+      };
+    }
+  },
+
+  // Delete faculty by ID
+  deleteFacultyById: async (facultyId) => {
+    try {
+      await api.delete(`/admin/${facultyId}/deletefaculty`);
+      return {
+        success: true,
+        message: 'Faculty deleted successfully'
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Failed to delete faculty',
+        error: error.response?.data
+      };
+    }
+  },
+
   // Get all departments
   getAllDepartments: async () => {
     try {
-      const response = await api.get('/admin/departments');
+      const response = await api.get('/department/departmentlist');
       return {
         success: true,
         data: response.data
@@ -246,12 +280,15 @@ const adminService = {
   // Get faculty by department
   getFacultyByDepartment: async (departmentId) => {
     try {
-      const response = await api.get(`/admin/departments/${departmentId}/faculty`);
+      console.log('AdminService: Calling faculty endpoint for department ID:', departmentId);
+      const response = await api.get(`/${departmentId}/faculties`);
+      console.log('AdminService: Faculty API response:', response);
       return {
         success: true,
         data: response.data
       };
     } catch (error) {
+      console.error('AdminService: Faculty API error:', error);
       return {
         success: false,
         message: error.response?.data?.message || 'Failed to fetch department faculty',

@@ -28,21 +28,21 @@ const AddStudentForm = ({ isOpen, onClose, onSuccess }) => {
         } else {
           // Fallback to hardcoded departments if API fails
           setDepartments([
-            { id: 1, name: 'Computer Science' },
-            { id: 2, name: 'Electrical Engineering' },
-            { id: 3, name: 'Business Studies' },
-            { id: 4, name: 'Civil Engineering' },
-            { id: 5, name: 'English' }
+            { id: 1, deptname: 'Computer Science' },
+            { id: 2, deptname: 'Electrical Engineering' },
+            { id: 3, deptname: 'Business Studies' },
+            { id: 4, deptname: 'Civil Engineering' },
+            { id: 5, deptname: 'English' }
           ]);
         }
       } catch {
         // Fallback to hardcoded departments
         setDepartments([
-          { id: 1, name: 'Computer Science' },
-          { id: 2, name: 'Electrical Engineering' },
-          { id: 3, name: 'Business Studies' },
-          { id: 4, name: 'Civil Engineering' },
-          { id: 5, name: 'English' }
+          { id: 1, deptname: 'Computer Science' },
+          { id: 2, deptname: 'Electrical Engineering' },
+          { id: 3, deptname: 'Business Studies' },
+          { id: 4, deptname: 'Civil Engineering' },
+          { id: 5, deptname: 'English' }
         ]);
       }
     };
@@ -273,8 +273,8 @@ const AddStudentForm = ({ isOpen, onClose, onSuccess }) => {
             >
               <option value="">Select department</option>
               {departments.map(dept => (
-                <option key={dept.id || dept.name || dept} value={dept.name || dept}>
-                  {dept.name || dept}
+                <option key={dept.id} value={dept.deptname}>
+                  {dept.deptname}
                 </option>
               ))}
             </select>

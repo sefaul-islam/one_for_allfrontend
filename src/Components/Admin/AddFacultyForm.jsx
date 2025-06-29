@@ -8,15 +8,59 @@ const AddFacultyForm = ({ isOpen, onClose, onSuccess }) => {
     email: '',
     password: '',
     confirmPassword: '',
+    role: 'FACULTY',
     department: '',
-    firstName: '',
-    lastName: ''
+    academicTitle: '',
+    contactNumber: ''
   });
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // Academic titles list
+  const academicTitles = [
+    'Lecturer',
+    'Assistant Professor', 
+    'Associate Professor',
+    'Professor',
+    'Senior Lecturer',
+    'Principal Lecturer',
+    'Visiting Professor',
+    'Emeritus Professor',
+    'Research Professor',
+    'Clinical Professor',
+    'Adjunct Professor',
+    'Professor of Practice'
+  ];
+
   useEffect(() => {
+    const fetchDepartments = async () => {
+      try {
+        const result = await adminService.getAllDepartments();
+        if (result.success) {
+          setDepartments(result.data || []);
+        } else {
+          // Fallback to hardcoded departments if API fails
+          setDepartments([
+            { id: 1, deptname: 'Computer Science' },
+            { id: 2, deptname: 'Electrical Engineering' },
+            { id: 3, deptname: 'Business Studies' },
+            { id: 4, deptname: 'Civil Engineering' },
+            { id: 5, deptname: 'English' }
+          ]);
+        }
+      } catch {
+        // Fallback to hardcoded departments
+        setDepartments([
+          { id: 1, deptname: 'Computer Science' },
+          { id: 2, deptname: 'Electrical Engineering' },
+          { id: 3, deptname: 'Business Studies' },
+          { id: 4, deptname: 'Civil Engineering' },
+          { id: 5, deptname: 'English' }
+        ]);
+      }
+    };
+
     if (isOpen) {
       fetchDepartments();
       // Reset form when opened
@@ -25,24 +69,14 @@ const AddFacultyForm = ({ isOpen, onClose, onSuccess }) => {
         email: '',
         password: '',
         confirmPassword: '',
+        role: 'FACULTY',
         department: '',
-        firstName: '',
-        lastName: ''
+        academicTitle: '',
+        contactNumber: ''
       });
       setError('');
     }
   }, [isOpen]);
-
-  const fetchDepartments = async () => {
-    try {
-      const result = await adminService.getAllDepartments();
-      if (result.success) {
-        setDepartments(result.data || []);
-      }
-    } catch {
-      // Silently handle error
-    }
-  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -57,6 +91,21 @@ const AddFacultyForm = ({ isOpen, onClose, onSuccess }) => {
     setError('');
 
     // Validation
+    if (!formData.department) {
+      setError('Department is required');
+      return;
+    }
+
+    if (!formData.academicTitle) {
+      setError('Academic title is required');
+      return;
+    }
+
+    if (!formData.contactNumber) {
+      setError('Contact number is required');
+      return;
+    }
+
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
       return;
@@ -73,9 +122,10 @@ const AddFacultyForm = ({ isOpen, onClose, onSuccess }) => {
         username: formData.username,
         email: formData.email,
         password: formData.password,
+        role: formData.role,
         department: formData.department,
-        firstName: formData.firstName,
-        lastName: formData.lastName
+        academicTitle: formData.academicTitle,
+        contactNumber: formData.contactNumber
       });
 
       if (result.success) {
@@ -120,27 +170,34 @@ const AddFacultyForm = ({ isOpen, onClose, onSuccess }) => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  First Name *
+                  Academic Title *
                 </label>
-                <input
-                  type="text"
-                  name="firstName"
-                  value={formData.firstName}
+                <select
+                  name="academicTitle"
+                  value={formData.academicTitle}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required
-                />
+                >
+                  <option value="">Select Academic Title</option>
+                  {academicTitles.map((title) => (
+                    <option key={title} value={title}>
+                      {title}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Last Name *
+                  Contact Number *
                 </label>
                 <input
-                  type="text"
-                  name="lastName"
-                  value={formData.lastName}
+                  type="tel"
+                  name="contactNumber"
+                  value={formData.contactNumber}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="e.g., 09123456789"
                   required
                 />
               </div>
@@ -187,8 +244,8 @@ const AddFacultyForm = ({ isOpen, onClose, onSuccess }) => {
               >
                 <option value="">Select Department</option>
                 {departments.map((dept) => (
-                  <option key={dept.id} value={dept.name}>
-                    {dept.name}
+                  <option key={dept.id} value={dept.deptname}>
+                    {dept.deptname}
                   </option>
                 ))}
               </select>

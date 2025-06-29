@@ -7,6 +7,8 @@ import adminService from '../../Services/adminService';
 const DepartmentList = () => {
   const [departments, setDepartments] = useState([]);
   const [filteredDepartments, setFilteredDepartments] = useState([]);
+  const [departmentFacultyCounts, setDepartmentFacultyCounts] = useState({});
+  const [loadingFacultyCounts, setLoadingFacultyCounts] = useState(true);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
@@ -28,21 +30,42 @@ const DepartmentList = () => {
     }
 
     const filtered = departments.filter(dept =>
-      dept.name?.toLowerCase().includes(searchTerm.toLowerCase())
+      dept.deptname?.toLowerCase().includes(searchTerm.toLowerCase())
     );
     setFilteredDepartments(filtered);
   }, [departments, searchTerm]);
 
   const fetchDepartments = async () => {
     try {
+      setLoadingFacultyCounts(true);
       const result = await adminService.getAllDepartments();
       if (result.success) {
-        setDepartments(result.data || []);
+        const depts = result.data || [];
+        setDepartments(depts);
+        
+        // Fetch faculty count for each department
+        const facultyCounts = {};
+        await Promise.all(
+          depts.map(async (dept) => {
+            try {
+              const facultyResult = await adminService.getFacultyByDepartment(dept.id);
+              if (facultyResult.success) {
+                facultyCounts[dept.id] = facultyResult.data?.length || 0;
+              } else {
+                facultyCounts[dept.id] = 0;
+              }
+            } catch {
+              facultyCounts[dept.id] = 0;
+            }
+          })
+        );
+        setDepartmentFacultyCounts(facultyCounts);
       }
     } catch {
       // Silently handle error
     } finally {
       setLoading(false);
+      setLoadingFacultyCounts(false);
     }
   };
 
@@ -52,7 +75,7 @@ const DepartmentList = () => {
 
     // Check if department already exists
     const exists = departments.some(dept => 
-      dept.name.toLowerCase() === newDepartmentName.trim().toLowerCase()
+      dept.deptname.toLowerCase() === newDepartmentName.trim().toLowerCase()
     );
 
     if (exists) {
@@ -63,11 +86,11 @@ const DepartmentList = () => {
     setAdding(true);
     try {
       const result = await adminService.addDepartment({
-        name: newDepartmentName.trim()
+        deptname: newDepartmentName.trim()
       });
 
       if (result.success) {
-        await fetchDepartments(); // Refresh the list
+        await fetchDepartments(); // Refresh the list with faculty counts
         setNewDepartmentName('');
         setShowAddForm(false);
       }
@@ -85,7 +108,7 @@ const DepartmentList = () => {
     try {
       const result = await adminService.deleteDepartment(departmentToDelete.id);
       if (result.success) {
-        await fetchDepartments(); // Refresh the list
+        await fetchDepartments(); // Refresh the list with faculty counts
         setShowDeleteModal(false);
         setDepartmentToDelete(null);
       }
@@ -102,10 +125,12 @@ const DepartmentList = () => {
   };
 
   const viewDepartmentFaculty = (department) => {
+    console.log('Clicked on department:', department);
     setSelectedDepartment(department);
   };
 
   if (selectedDepartment) {
+    console.log('Rendering DepartmentFacultyView for selected department:', selectedDepartment);
     return (
       <DepartmentFacultyView
         department={selectedDepartment}
@@ -154,7 +179,8 @@ const DepartmentList = () => {
         {filteredDepartments.map((department) => (
           <div
             key={department.id}
-            className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-all duration-200"
+            className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-all duration-200 cursor-pointer"
+            onClick={() => viewDepartmentFaculty(department)}
           >
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
@@ -162,15 +188,28 @@ const DepartmentList = () => {
                   <Building className="w-6 h-6 text-blue-600" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900">{department.name}</h3>
+                  <h3 className="font-semibold text-gray-900">{department.deptname}</h3>
+                  <p className="text-xs text-gray-500 font-mono">ID: {department.id}</p>
                   <div className="flex items-center gap-1 text-sm text-gray-500 mt-1">
                     <Users className="w-4 h-4" />
-                    <span>{department.facultyCount || 0} Faculty</span>
+                    <span>
+                      {loadingFacultyCounts ? (
+                        <span className="inline-flex items-center">
+                          <div className="animate-spin rounded-full h-3 w-3 border-b border-gray-400 mr-1"></div>
+                          Loading...
+                        </span>
+                      ) : (
+                        `${departmentFacultyCounts[department.id] || 0} Faculty`
+                      )}
+                    </span>
                   </div>
                 </div>
               </div>
               <button
-                onClick={() => openDeleteModal(department)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openDeleteModal(department);
+                }}
                 className="text-red-500 hover:text-red-700 p-1 hover:bg-red-50 rounded transition-colors duration-200"
                 title="Delete Department"
               >
@@ -178,13 +217,10 @@ const DepartmentList = () => {
               </button>
             </div>
 
-            <button
-              onClick={() => viewDepartmentFaculty(department)}
-              className="w-full bg-gray-50 hover:bg-gray-100 text-gray-700 py-2 px-3 rounded-lg flex items-center justify-between transition-colors duration-200"
-            >
-              <span className="text-sm font-medium">View Faculty</span>
+            <div className="bg-gray-50 hover:bg-gray-100 text-gray-700 py-2 px-3 rounded-lg flex items-center justify-between transition-colors duration-200">
+              <span className="text-sm font-medium">Click to View Faculty</span>
               <ChevronRight className="w-4 h-4" />
-            </button>
+            </div>
           </div>
         ))}
       </div>

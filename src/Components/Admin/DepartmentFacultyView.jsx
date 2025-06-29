@@ -4,31 +4,31 @@ import SearchBar from './SearchBar';
 import adminService from '../../Services/adminService';
 
 const DepartmentFacultyView = ({ department, onBack }) => {
+  console.log('DepartmentFacultyView component rendered with department:', department);
   const [faculty, setFaculty] = useState([]);
   const [filteredFaculty, setFilteredFaculty] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
-  useEffect(() => {
-    fetchDepartmentFaculty();
-  }, [fetchDepartmentFaculty]);
-
-  useEffect(() => {
-    filterFaculty();
-  }, [faculty, searchTerm, filterFaculty]);
-
   const fetchDepartmentFaculty = useCallback(async () => {
+    console.log('Fetching faculty for department:', department);
     try {
       const result = await adminService.getFacultyByDepartment(department.id);
+      console.log('Faculty fetch result:', result);
       if (result.success) {
+        console.log('Setting faculty data:', result.data);
         setFaculty(result.data || []);
+      } else {
+        console.error('Failed to fetch faculty:', result.message);
+        setFaculty([]);
       }
-    } catch {
-      // Silently handle error
+    } catch (error) {
+      console.error('Error in fetchDepartmentFaculty:', error);
+      setFaculty([]);
     } finally {
       setLoading(false);
     }
-  }, [department.id]);
+  }, [department]);
 
   const filterFaculty = useCallback(() => {
     if (!searchTerm.trim()) {
@@ -38,10 +38,20 @@ const DepartmentFacultyView = ({ department, onBack }) => {
 
     const filtered = faculty.filter(f =>
       f.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      f.email?.toLowerCase().includes(searchTerm.toLowerCase())
+      f.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      f.academicTitle?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      f.facultyId?.toLowerCase().includes(searchTerm.toLowerCase())
     );
     setFilteredFaculty(filtered);
   }, [faculty, searchTerm]);
+
+  useEffect(() => {
+    fetchDepartmentFaculty();
+  }, [fetchDepartmentFaculty]);
+
+  useEffect(() => {
+    filterFaculty();
+  }, [faculty, searchTerm, filterFaculty]);
 
   if (loading) {
     return (
@@ -64,7 +74,7 @@ const DepartmentFacultyView = ({ department, onBack }) => {
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
             <Users className="w-7 h-7 text-blue-600" />
-            {department.name} Faculty
+            {department.deptname} Faculty
           </h1>
           <p className="text-gray-600 mt-1">
             {filteredFaculty.length} faculty member{filteredFaculty.length !== 1 ? 's' : ''}
@@ -83,7 +93,7 @@ const DepartmentFacultyView = ({ department, onBack }) => {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {filteredFaculty.map((member) => (
           <div
-            key={member.id}
+            key={member.facultyId}
             className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-all duration-200"
           >
             <div className="flex items-start gap-4">
@@ -98,10 +108,16 @@ const DepartmentFacultyView = ({ department, onBack }) => {
                   <Mail className="w-4 h-4" />
                   <span className="truncate">{member.email}</span>
                 </div>
-                <div className="mt-2">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                    Active
-                  </span>
+                <div className="mt-2 space-y-1">
+                  <div className="text-xs text-gray-600">
+                    <span className="font-medium">Faculty ID:</span> {member.facultyId}
+                  </div>
+                  <div className="text-xs text-gray-600">
+                    <span className="font-medium">Title:</span> {member.academicTitle || 'N/A'}
+                  </div>
+                  <div className="text-xs text-gray-600">
+                    <span className="font-medium">Contact:</span> {member.contactNumber || 'N/A'}
+                  </div>
                 </div>
               </div>
             </div>
@@ -118,7 +134,7 @@ const DepartmentFacultyView = ({ department, onBack }) => {
           <p className="text-gray-500">
             {searchTerm 
               ? 'Try adjusting your search terms.'
-              : `No faculty members are currently assigned to ${department.name}.`
+              : `No faculty members are currently assigned to ${department.deptname}.`
             }
           </p>
         </div>
