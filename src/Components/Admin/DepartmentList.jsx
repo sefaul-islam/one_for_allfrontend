@@ -125,12 +125,10 @@ const DepartmentList = () => {
   };
 
   const viewDepartmentFaculty = (department) => {
-    console.log('Clicked on department:', department);
     setSelectedDepartment(department);
   };
 
   if (selectedDepartment) {
-    console.log('Rendering DepartmentFacultyView for selected department:', selectedDepartment);
     return (
       <DepartmentFacultyView
         department={selectedDepartment}

@@ -1,57 +1,29 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { ArrowLeft, Users, Mail, User } from 'lucide-react';
-import SearchBar from './SearchBar';
 import adminService from '../../Services/adminService';
 
 const DepartmentFacultyView = ({ department, onBack }) => {
-  console.log('DepartmentFacultyView component rendered with department:', department);
   const [faculty, setFaculty] = useState([]);
-  const [filteredFaculty, setFilteredFaculty] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
 
   const fetchDepartmentFaculty = useCallback(async () => {
-    console.log('Fetching faculty for department:', department);
     try {
       const result = await adminService.getFacultyByDepartment(department.id);
-      console.log('Faculty fetch result:', result);
       if (result.success) {
-        console.log('Setting faculty data:', result.data);
         setFaculty(result.data || []);
       } else {
-        console.error('Failed to fetch faculty:', result.message);
         setFaculty([]);
       }
-    } catch (error) {
-      console.error('Error in fetchDepartmentFaculty:', error);
+    } catch {
       setFaculty([]);
     } finally {
       setLoading(false);
     }
   }, [department]);
 
-  const filterFaculty = useCallback(() => {
-    if (!searchTerm.trim()) {
-      setFilteredFaculty(faculty);
-      return;
-    }
-
-    const filtered = faculty.filter(f =>
-      f.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      f.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      f.academicTitle?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      f.facultyId?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    setFilteredFaculty(filtered);
-  }, [faculty, searchTerm]);
-
   useEffect(() => {
     fetchDepartmentFaculty();
   }, [fetchDepartmentFaculty]);
-
-  useEffect(() => {
-    filterFaculty();
-  }, [faculty, searchTerm, filterFaculty]);
 
   if (loading) {
     return (
@@ -77,21 +49,14 @@ const DepartmentFacultyView = ({ department, onBack }) => {
             {department.deptname} Faculty
           </h1>
           <p className="text-gray-600 mt-1">
-            {filteredFaculty.length} faculty member{filteredFaculty.length !== 1 ? 's' : ''}
+            {faculty.length} faculty member{faculty.length !== 1 ? 's' : ''}
           </p>
         </div>
       </div>
 
-      {/* Search */}
-      <SearchBar
-        value={searchTerm}
-        onChange={setSearchTerm}
-        placeholder="Search faculty members..."
-      />
-
       {/* Faculty Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {filteredFaculty.map((member) => (
+        {faculty.map((member) => (
           <div
             key={member.facultyId}
             className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-all duration-200"
@@ -125,17 +90,14 @@ const DepartmentFacultyView = ({ department, onBack }) => {
         ))}
       </div>
 
-      {filteredFaculty.length === 0 && !loading && (
+      {faculty.length === 0 && !loading && (
         <div className="text-center py-12">
           <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">
-            {searchTerm ? 'No faculty found' : 'No faculty members'}
+            No faculty members
           </h3>
           <p className="text-gray-500">
-            {searchTerm 
-              ? 'Try adjusting your search terms.'
-              : `No faculty members are currently assigned to ${department.deptname}.`
-            }
+            No faculty members are currently assigned to {department.deptname}.
           </p>
         </div>
       )}

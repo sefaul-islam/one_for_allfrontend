@@ -39,8 +39,6 @@ export default function LoginPage() {
       const result = await authService.login(credentials);
       
       if (result.success) {
-        console.log('Login result:', result);
-
         const token = result.data;
       
         const decoded = jwtDecode(token);
@@ -62,9 +60,8 @@ export default function LoginPage() {
       }
      
       
-    } catch (err) {
+    } catch {
       setError('An unexpected error occurred');
-      console.error('Login error:', err);
     } finally {
       setLoading(false);
     }

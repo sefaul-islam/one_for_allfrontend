@@ -57,9 +57,7 @@ export default function LogoutButton({ onLogout, className = "", showCard = true
 function DashboardDemo() {
   const handleLogout = async () => {
     // Simulate your logout logic
-    console.log('Performing logout...');
     await new Promise(resolve => setTimeout(resolve, 1500));
-    console.log('Logout completed');
   };
 
   return (

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, GraduationCap, Calendar, Activity } from 'lucide-react';
+import { Users, GraduationCap, Calendar } from 'lucide-react';
 import StatsCard from './StatsCard';
 import RecentActivities from './RecentActivities';
 import AddStudentForm from './AddStudentForm';
@@ -10,8 +10,7 @@ const DashboardOverview = () => {
   const [stats, setStats] = useState({
     totalStudents: 0,
     totalFaculty: 0,
-    totalSessions: 0,
-    activeSessions: 0
+    totalSessions: 0
   });
   const [loading, setLoading] = useState(true);
   const [showAddStudentForm, setShowAddStudentForm] = useState(false);
@@ -23,39 +22,33 @@ const DashboardOverview = () => {
 
   const fetchDashboardStats = async () => {
     try {
-      // Fetch real student, faculty, and session data
+      // Fetch real student, faculty, and session data using the same methods as in individual tabs
       const [studentsResult, facultyResult] = await Promise.all([
         adminService.getAllStudents(),
-        adminService.getAllFaculty()
+        adminService.getAllFacultyMembers() // Use getAllFacultyMembers for consistency with faculty tab
       ]);
 
       const studentCount = studentsResult.success ? studentsResult.data.length : 0;
       const facultyCount = facultyResult.success ? facultyResult.data.length : 0;
 
-      // Fetch sessions data
+      // Fetch sessions data using the same method as Sessions tab
       const sessionsResult = await adminService.getAllSessions();
-      const totalSessions = sessionsResult.success ? sessionsResult.data.length : 0;
-      const activeSessions = sessionsResult.success 
-        ? sessionsResult.data.filter(s => 
-            s.status === 'active' || 
-            s.status === 'ongoing' || 
-            s.status === 'in-progress'
-          ).length 
-        : 0;
+      const totalSessions = sessionsResult.success ? (Array.isArray(sessionsResult.data) ? sessionsResult.data.length : 0) : 0;
+      
+      console.log('Sessions result for dashboard:', sessionsResult);
+      console.log('Total sessions count:', totalSessions);
 
       setStats({
         totalStudents: studentCount,
         totalFaculty: facultyCount,
-        totalSessions: totalSessions,
-        activeSessions: activeSessions
+        totalSessions: totalSessions
       });
     } catch {
       // Fallback to default values
       setStats({
         totalStudents: 0,
         totalFaculty: 0,
-        totalSessions: 0,
-        activeSessions: 0
+        totalSessions: 0
       });
     } finally {
       setLoading(false);
@@ -92,38 +85,24 @@ const DashboardOverview = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <StatsCard
           title="Total Students"
           value={stats.totalStudents}
           icon={GraduationCap}
           color="blue"
-          change="+12%"
-          changeType="positive"
         />
         <StatsCard
           title="Faculty Members"
           value={stats.totalFaculty}
           icon={Users}
           color="green"
-          change="+5%"
-          changeType="positive"
         />
         <StatsCard
           title="Total Sessions"
           value={stats.totalSessions}
           icon={Calendar}
           color="purple"
-          change="+8%"
-          changeType="positive"
-        />
-        <StatsCard
-          title="Active Sessions"
-          value={stats.activeSessions}
-          icon={Activity}
-          color="orange"
-          change="+15%"
-          changeType="positive"
         />
       </div>
 

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import StudentNavbar from './StudentNavbar';
 import DashboardContent from './DashboardContent';
 import CounsellingContent from './CounsellingContent';
-import LogoutCard from '../LogoutCard';
+import LogoutTransition from '../LogoutTransition';
 import { getStudentCounselStats } from '../../Services/counselService';
 
 const StudentDashboard = () => {
@@ -74,8 +74,8 @@ const StudentDashboard = () => {
         )}
       </div>
       
-      {/* Logout Animation */}
-      {isLoggingOut && <LogoutCard onComplete={completeLogout} />}
+      {/* Logout Transition */}
+      {isLoggingOut && <LogoutTransition onComplete={completeLogout} />}
     </div>
   );
 };

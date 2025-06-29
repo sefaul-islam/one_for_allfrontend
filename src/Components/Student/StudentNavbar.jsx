@@ -1,12 +1,13 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { Menu, ChevronDown } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
+import ProfileDropdown from '../ProfileDropdown';
 
 const COUNSELLING_OPTIONS = [
   { key: 'join', label: 'Join Counselling' },
   { key: 'my', label: 'My Counselling' },
 ];
 
-const StudentNavbar = ({ activeTab, setActiveTab, onMenu, counsellingOption, onCounsellingOption }) => {
+const StudentNavbar = ({ activeTab, setActiveTab, counsellingOption, onCounsellingOption, onLogout }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -73,13 +74,7 @@ const StudentNavbar = ({ activeTab, setActiveTab, onMenu, counsellingOption, onC
             )}
           </div>
         </div>
-        <button
-          onClick={onMenu}
-          className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-          aria-label="Open sidebar"
-        >
-          <Menu className="h-6 w-6 text-gray-700" />
-        </button>
+        <ProfileDropdown onLogout={onLogout} />
       </div>
     </div>
   );

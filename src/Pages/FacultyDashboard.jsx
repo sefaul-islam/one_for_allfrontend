@@ -1,70 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Calendar, Plus, Eye, BarChart3, BookOpen, Clock, CheckCircle, AlertCircle, RefreshCw, LogOut, Menu } from 'lucide-react';
-import {jwtDecode} from 'jwt-decode'
+import { Users, Calendar, Plus, Eye, BarChart3, BookOpen, Clock, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
+import {jwtDecode} from 'jwt-decode';
 import { createReserveCounsel, getCounselStatsByFaculty } from '../Services/counselService';
+import adminService from '../Services/adminService';
 import FacultyDashboardHeader from '../Components/Faculty/FacultyDashboardHeader';
 import FacultyDashboardNav from '../Components/Faculty/FacultyDashboardNav';
 import FacultyDashboardView from '../Components/Faculty/FacultyDashboardView';
 import FacultyPrepareView from '../Components/Faculty/FacultyPrepareView';
 import FacultySessionTableView from '../Components/Faculty/FacultySessionTableView';
-import LogoutCard from '../Components/LogoutCard';
-// TODO: Import the actual axios service file
-// import { apiService } from './services/axiosService';
-
-// TEMPORARY: Mock API service for demonstration
-// TODO: Remove this mock service and uncomment the import above
-const apiService = {
-  getStats: async () => {
-    // TODO: This will be replaced by actual API call
-    // Expected response format:
-    // {
-    //   totalSessions: number,
-    //   completedSessions: number,
-    //   upcomingSessions: number
-    // }
-    throw new Error('API service not implemented');
-  },
-  
-  getAllSessions: async () => {
-    // TODO: This will be replaced by actual API call
-    // Expected response format:
-    // [
-    //   {
-    //     id: number,
-    //     title: string,
-    //     description: string,
-    //     startTime: string (ISO format),
-    //     endTime: string (ISO format),
-    //     maxParticipants: number,
-    //     currentParticipants: number,
-    //     status: 'Scheduled' | 'Completed' | 'Cancelled'
-    //   }
-    // ]
-    throw new Error('API service not implemented');
-  },
-  
-  createSession: async (sessionData) => {
-    // TODO: This will be replaced by actual API call
-    // Expected request format:
-    // {
-    //   title: string,
-    //   description: string,
-    //   startTime: string (ISO format),
-    //   endTime: string (ISO format),
-    //   maxParticipants: number
-    // }
-    throw new Error('API service not implemented');
-  }
-};
+import ProfileDropdown from '../Components/ProfileDropdown';
+import LogoutTransition from '../Components/LogoutTransition';
 
 const FacultyDashboard = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [sessions, setSessions] = useState([]);
   const [stats, setStats] = useState({
     totalSessions: 0,
     completedSessions: 0,
-    upcomingSessions: 0
+    upcomingSessions: 0,
+    totalFaculty: 0
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -131,7 +85,7 @@ const FacultyDashboard = () => {
       else {
         setError(result.message);
       }
-    } catch (err) {
+    } catch {
       setError('Failed to create session. Please try again.');
     } finally {
       setLoading(false);
@@ -159,19 +113,54 @@ const FacultyDashboard = () => {
     setLoading(true);
     setError('');
     try {
-      const result = await getCounselStatsByFaculty();
-      if (result.success) {
+      // Fetch counsel stats
+      const counselResult = await getCounselStatsByFaculty();
+      console.log('Counsel result:', counselResult);
+
+      if (counselResult.success) {
         setStats(prev => ({
           ...prev,
-          totalSessions: Array.isArray(result.data) ? result.data.length : 0,
-          completedSessions: result.completedCount,
-          upcomingSessions: result.pendingCount
+          totalSessions: Array.isArray(counselResult.data) ? counselResult.data.length : 0,
+          completedSessions: counselResult.completedCount || 0,
+          upcomingSessions: counselResult.pendingCount || 0,
+          totalFaculty: 0 // Will be updated separately
         }));
-        setSessions(Array.isArray(result.data) ? result.data : []);
+        setSessions(Array.isArray(counselResult.data) ? counselResult.data : []);
       } else {
-        setError(result.message || 'Failed to fetch counsel stats');
+        setError(counselResult.message || 'Failed to fetch counsel stats');
       }
-    } catch (err) {
+
+      // Try to fetch faculty count separately (may fail if no admin access)
+      try {
+        const facultyResult = await adminService.getAllFacultyMembers();
+        console.log('Faculty result:', facultyResult);
+        
+        if (facultyResult.success) {
+          const facultyCount = Array.isArray(facultyResult.data) ? facultyResult.data.length : 0;
+          console.log('Faculty count:', facultyCount);
+          
+          setStats(prev => ({
+            ...prev,
+            totalFaculty: facultyCount
+          }));
+        } else {
+          console.log('Faculty fetch failed:', facultyResult.message);
+          // Set a default value or leave as 0
+          setStats(prev => ({
+            ...prev,
+            totalFaculty: 0
+          }));
+        }
+      } catch (facultyError) {
+        console.error('Faculty fetch error:', facultyError);
+        // Faculty user might not have access to admin endpoints
+        setStats(prev => ({
+          ...prev,
+          totalFaculty: 0
+        }));
+      }
+    } catch (error) {
+      console.error('Error in handleRefresh:', error);
       setError('Failed to fetch counsel stats');
     } finally {
       setLoading(false);
@@ -180,7 +169,6 @@ const FacultyDashboard = () => {
 
   useEffect(() => {
     handleRefresh();
-    // eslint-disable-next-line
   }, []);
 
   const resetNewSession = () => setNewSession({
@@ -193,21 +181,13 @@ const FacultyDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Sidebar */}
-      <FacultySidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} onLogout={handleLogout} />
-      {/* Header with menu button */}
+      {/* Header with profile dropdown */}
       <div className="bg-white shadow-sm border-b border-gray-200">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center space-x-4">
-            <button
-              className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-              onClick={() => setIsSidebarOpen(true)}
-              aria-label="Open sidebar"
-            >
-              <Menu className="h-6 w-6 text-gray-700" />
-            </button>
             <h1 className="text-2xl font-bold text-gray-900">Faculty Dashboard</h1>
           </div>
+          <ProfileDropdown onLogout={handleLogout} />
         </div>
       </div>
       <FacultyDashboardNav activeTab={activeTab} setActiveTab={setActiveTab} />
@@ -248,8 +228,8 @@ const FacultyDashboard = () => {
         )}
       </div>
       
-      {/* Logout Animation */}
-      {isLoggingOut && <LogoutCard onComplete={completeLogout} />}
+      {/* Logout Transition */}
+      {isLoggingOut && <LogoutTransition onComplete={completeLogout} />}
     </div>
   );
 };

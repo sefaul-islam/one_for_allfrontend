@@ -21,8 +21,7 @@ const PrivateRoute = ({ children, allowedRoles }) => {
     const hasAccess = userRoles.some(role => allowedRoles.includes(role));
 
     return hasAccess ? children : <Navigate to="/unauthorized" replace />;
-  } catch (err) {
-    console.error('Token decode failed:', err);
+  } catch {
     return <Navigate to="/login" replace />;
   }
 };

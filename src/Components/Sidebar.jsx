@@ -12,7 +12,6 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
     //     'Content-Type': 'application/json'
     //   }
     // });
-    console.log('Search counsels clicked');
   };
 
   const handleRegisteredCounsels = () => {
@@ -25,7 +24,6 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
     //     'Content-Type': 'application/json'
     //   }
     // });
-    console.log('Registered counsels clicked');
   };
 
   return (

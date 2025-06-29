@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { User, LogOut, LayoutDashboard, Users, GraduationCap, Calendar, Building } from 'lucide-react';
-import LogoutCard from '../LogoutCard';
+import LogoutTransition from '../LogoutTransition';
 
 const AdminNavbar = ({ activeTab, setActiveTab }) => {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [showLogoutCard, setShowLogoutCard] = useState(false);
+  const [showLogoutTransition, setShowLogoutTransition] = useState(false);
 
   const navigationTabs = [
     {
@@ -36,7 +36,12 @@ const AdminNavbar = ({ activeTab, setActiveTab }) => {
 
   const handleSignOut = () => {
     setShowProfileMenu(false);
-    setShowLogoutCard(true);
+    setShowLogoutTransition(true);
+  };
+
+  const completeLogout = () => {
+    localStorage.removeItem('token');
+    window.location.href = '/login';
   };
 
   // Get admin info from localStorage
@@ -139,8 +144,8 @@ const AdminNavbar = ({ activeTab, setActiveTab }) => {
         </div>
       </nav>
 
-      {/* Logout Card */}
-      {showLogoutCard && <LogoutCard />}
+      {/* Logout Transition */}
+      {showLogoutTransition && <LogoutTransition onComplete={completeLogout} />}
 
       {/* Backdrop to close profile menu */}
       {showProfileMenu && (

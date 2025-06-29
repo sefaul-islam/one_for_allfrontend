@@ -1,8 +1,8 @@
 import React from 'react';
-import { Calendar, CheckCircle, Clock } from 'lucide-react';
+import { Calendar, CheckCircle, Clock, Users } from 'lucide-react';
 
 const FacultyStatsCards = ({ stats }) => (
-  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
     <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow duration-300">
       <div className="flex items-center justify-between">
         <div>
@@ -36,6 +36,22 @@ const FacultyStatsCards = ({ stats }) => (
         </div>
         <div className="bg-orange-400/30 rounded-full p-3">
           <Clock className="h-8 w-8 text-orange-100" />
+        </div>
+      </div>
+    </div>
+    <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow duration-300">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-purple-100 text-sm font-medium">Faculty Members</p>
+          <p className="text-4xl font-bold mt-2">
+            {stats.totalFaculty !== undefined ? stats.totalFaculty : 'N/A'}
+          </p>
+          <p className="text-purple-200 text-xs mt-1">
+            {stats.totalFaculty === 0 ? 'Access limited' : 'Institution wide'}
+          </p>
+        </div>
+        <div className="bg-purple-400/30 rounded-full p-3">
+          <Users className="h-8 w-8 text-purple-100" />
         </div>
       </div>
     </div>

@@ -70,9 +70,9 @@ const adminService = {
   },
 
   // Get all sessions
-  getAllSessions: async (search = '', page = 1, limit = 10) => {
+  getAllSessions: async () => {
     try {
-      const response = await api.get(`/admin/sessions?search=${search}&page=${page}&limit=${limit}`);
+      const response = await api.get('/reserve-counsels/all');
       return {
         success: true,
         data: response.data
@@ -245,7 +245,7 @@ const adminService = {
   // Add new department
   addDepartment: async (departmentData) => {
     try {
-      const response = await api.post('/admin/departments', departmentData);
+      const response = await api.post('/department/adddepartment', departmentData);
       return {
         success: true,
         data: response.data,
@@ -280,15 +280,12 @@ const adminService = {
   // Get faculty by department
   getFacultyByDepartment: async (departmentId) => {
     try {
-      console.log('AdminService: Calling faculty endpoint for department ID:', departmentId);
       const response = await api.get(`/${departmentId}/faculties`);
-      console.log('AdminService: Faculty API response:', response);
       return {
         success: true,
         data: response.data
       };
     } catch (error) {
-      console.error('AdminService: Faculty API error:', error);
       return {
         success: false,
         message: error.response?.data?.message || 'Failed to fetch department faculty',

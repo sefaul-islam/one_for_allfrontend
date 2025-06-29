@@ -11,7 +11,9 @@ const FacultySidebar = ({ isOpen, onClose, onLogout }) => {
       const decoded = jwtDecode(token);
       username = decoded.username || decoded.name || decoded.sub || '';
     }
-  } catch {}
+  } catch {
+    // Token decode failed, username will remain empty
+  }
 
   return (
     <div
@@ -36,7 +38,7 @@ const FacultySidebar = ({ isOpen, onClose, onLogout }) => {
         {/* Add sidebar navigation links here if needed */}
       </div>
       <div className="px-6 py-6 border-t border-gray-200 mt-auto">
-        <LogoutButton onLogout={onLogout} className="w-full" />
+        <LogoutButton onLogout={onLogout} className="w-full" showCard={false} />
       </div>
     </div>
   );

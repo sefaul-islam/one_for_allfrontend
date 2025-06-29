@@ -18,7 +18,10 @@ const SessionList = () => {
   const fetchSessions = async () => {
     try {
       const result = await adminService.getAllSessions();
+      console.log('Sessions result for sessions tab:', result);
       if (result.success) {
+        console.log('Sessions data:', result.data);
+        console.log('Sessions count in tab:', Array.isArray(result.data) ? result.data.length : 0);
         setSessions(result.data);
       }
     } catch {
